@@ -1,7 +1,6 @@
 
 
 
-
 // create a looping table to pull qvd file names
 QVDs: 
 Load * inline [
@@ -13,9 +12,11 @@ Table3,3
 
 LET path = ''; // << input file source path here 
 LET outpath = '';// input file output path here 
+LET QlikFields = 'QlikFieldNames'
 LET ext = '.qvd'; 
 LET ext2 = '.csv'; 
 //LET debug = ''; //used for debug only
+
 
 
 // loop through each filevalue and store into csv files for use in ML tools/models
@@ -26,12 +27,23 @@ for each file in FieldValueList('FileName')
   FROM [$(path)$(file)$(ext)]
   (qvd);
 
-store '$(file)' into [$(outpath)$(file)$(ext2)] (delimiter is ',');  
+	store '$(file)' into [$(outpath)$(file)$(ext2)] (delimiter is ',');  
+  
+        // create loop to load all columns from a loaded table
+        for i =1 to NoOfFields('$(file)')
+          Fields:
+          load FieldName($(i),'$(file)') as FieldName,
+                '$(file)' as TableName
+          AutoGenerate 1; 
+        next i; 
 
   drop table '$(file)'; 
 
 next file; 
 
+// store the metadata file into output path now
+store Fields into [$(outpath)$(QlikFields)$(ext2)] (delimiter is ',');  
+
 // clean up rest of tables now 
-drop table QVDs; 
+drop tables QVDs,Fields; 
 
