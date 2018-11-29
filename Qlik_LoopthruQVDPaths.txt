@@ -1,0 +1,37 @@
+
+
+
+
+// create a looping table to pull qvd file names
+QVDs: 
+Load * inline [
+FileName, FileID
+Table1,1
+Table2,2
+Table3,3
+]; 
+
+LET path = ''; // << input file source path here 
+LET outpath = '';// input file output path here 
+LET ext = '.qvd'; 
+LET ext2 = '.csv'; 
+//LET debug = ''; //used for debug only
+
+
+// loop through each filevalue and store into csv files for use in ML tools/models
+for each file in FieldValueList('FileName')
+
+  '$(file)':
+  LOAD *
+  FROM [$(path)$(file)$(ext)]
+  (qvd);
+
+store '$(file)' into [$(outpath)$(file)$(ext2)] (delimiter is ',');  
+
+  drop table '$(file)'; 
+
+next file; 
+
+// clean up rest of tables now 
+drop table QVDs; 
+
